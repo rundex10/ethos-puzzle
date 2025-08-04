@@ -16,7 +16,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding-top: 50px;
+      padding: 20px;
     }
 
     h1 {
@@ -44,32 +44,32 @@
       border-right-color: #fff;
     }
 
-    #templatePopup {
+    #templatePopup, #modePopup {
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 80%;
-      max-width: 800px;
+      width: 70%;
+      max-width: 600px;
       background: #f0f0f0;
       border: 4px solid #000;
       box-shadow: inset -3px -3px #fff, inset 3px 3px #555;
       display: none;
-      padding: 20px;
+      padding: 15px;
       z-index: 1000;
     }
 
     .template-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+      gap: 8px;
     }
 
     .template-item {
       background: #dcdcdc;
       border: 2px solid #000;
       box-shadow: inset -2px -2px #fff, inset 2px 2px #333;
-      padding: 8px;
+      padding: 6px;
       text-align: center;
     }
 
@@ -77,12 +77,13 @@
       width: 100%;
       height: auto;
       border: 1px solid #000;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .template-name {
       font-weight: bold;
-      margin-bottom: 6px;
+      font-size: 14px;
+      margin-bottom: 4px;
     }
 
     .overlay {
@@ -96,10 +97,21 @@
       z-index: 900;
     }
 
-    #selectedTemplatePreview {
-      max-width: 300px;
+    #puzzleBoard {
+      display: grid;
       margin-top: 20px;
-      border: 2px solid #000;
+      border: 4px solid #000;
+    }
+
+    .tile {
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      border: 1px solid #999;
+      cursor: grab;
+    }
+
+    .dropzone {
+      border: 2px dashed #666;
     }
   </style>
 </head>
@@ -107,17 +119,27 @@
 
   <h1>🧩 EthOS Puzzle Game</h1>
   <button class="retro-btn" onclick="openTemplatePopup()">Choose Template</button>
+  <button class="retro-btn" onclick="openModePopup()">Mode</button>
   <button class="retro-btn" onclick="startGame()">Start Game</button>
 
   <div id="selectedTemplateName"></div>
-  <img id="selectedTemplatePreview" src="" alt="" style="display: none;">
+  <img id="selectedTemplatePreview" src="" alt="" style="max-width: 300px; display:none; margin-top: 10px;">
+
+  <div id="puzzleBoard"></div>
+
+  <!-- Popup -->
+  <div class="overlay" id="overlay" onclick="closePopups()"></div>
 
   <div id="templatePopup">
-    <div class="template-grid" id="templateList">
-      <!-- Templates will be injected here -->
-    </div>
+    <div class="template-grid" id="templateList"></div>
   </div>
-  <div class="overlay" id="overlay" onclick="closeTemplatePopup()"></div>
+
+  <div id="modePopup">
+    <h3>Select Puzzle Mode</h3>
+    <button class="retro-btn" onclick="selectMode(3)">3 x 3</button>
+    <button class="retro-btn" onclick="selectMode(6)">6 x 6</button>
+    <button class="retro-btn" onclick="selectMode(10)">10 x 10</button>
+  </div>
 
   <script>
     const templates = [
@@ -132,33 +154,15 @@
       { name: "EthOS Surreal Animals", file: "ethos-surreal-animals.png" }
     ];
 
+    let selectedTemplate = null;
+    let puzzleSize = 3;
+
     const templateList = document.getElementById("templateList");
-    const templatePopup = document.getElementById("templatePopup");
-    const overlay = document.getElementById("overlay");
     const preview = document.getElementById("selectedTemplatePreview");
     const templateName = document.getElementById("selectedTemplateName");
+    const puzzleBoard = document.getElementById("puzzleBoard");
 
-    let selectedTemplate = null;
-
-    function openTemplatePopup() {
-      templatePopup.style.display = "block";
-      overlay.style.display = "block";
-    }
-
-    function closeTemplatePopup() {
-      templatePopup.style.display = "none";
-      overlay.style.display = "none";
-    }
-
-    function selectTemplate(file, name) {
-      selectedTemplate = file;
-      preview.src = file;
-      preview.style.display = "block";
-      templateName.textContent = "Selected: " + name;
-      closeTemplatePopup();
-    }
-
-    // Load templates into popup
+    // Generate template selection UI
     templates.forEach(tpl => {
       const div = document.createElement("div");
       div.className = "template-item";
@@ -170,13 +174,97 @@
       templateList.appendChild(div);
     });
 
+    function openTemplatePopup() {
+      document.getElementById("templatePopup").style.display = "block";
+      document.getElementById("overlay").style.display = "block";
+    }
+
+    function openModePopup() {
+      document.getElementById("modePopup").style.display = "block";
+      document.getElementById("overlay").style.display = "block";
+    }
+
+    function closePopups() {
+      document.getElementById("templatePopup").style.display = "none";
+      document.getElementById("modePopup").style.display = "none";
+      document.getElementById("overlay").style.display = "none";
+    }
+
+    function selectTemplate(file, name) {
+      selectedTemplate = file;
+      preview.src = file;
+      preview.style.display = "block";
+      templateName.textContent = "Selected: " + name;
+      closePopups();
+    }
+
+    function selectMode(size) {
+      puzzleSize = size;
+      closePopups();
+    }
+
     function startGame() {
       if (!selectedTemplate) {
-        alert("Please select a template before starting!");
+        alert("Please select a template!");
         return;
       }
-      // Placeholder: Here you'll load the puzzle game logic
-      alert("🎉 Game started with template: " + selectedTemplate);
+      generatePuzzle();
+    }
+
+    function generatePuzzle() {
+      puzzleBoard.innerHTML = "";
+      const size = puzzleSize;
+      puzzleBoard.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+      puzzleBoard.style.width = "600px";
+      puzzleBoard.style.height = "600px";
+
+      let positions = [];
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          positions.push({ x, y });
+        }
+      }
+
+      const shuffled = [...positions].sort(() => Math.random() - 0.5);
+
+      shuffled.forEach((pos, index) => {
+        const tile = document.createElement("div");
+        tile.className = "tile";
+        tile.style.backgroundImage = `url(${selectedTemplate})`;
+        tile.style.backgroundPosition = `${(pos.x / (size - 1)) * 100}% ${(pos.y / (size - 1)) * 100}%`;
+        tile.style.backgroundSize = `${size * 100}% ${size * 100}%`;
+        tile.draggable = true;
+        tile.dataset.correct = `${index}`;
+        tile.dataset.current = `${positions.indexOf(pos)}`;
+        tile.addEventListener("dragstart", dragStart);
+        tile.addEventListener("dragover", dragOver);
+        tile.addEventListener("drop", dropTile);
+        puzzleBoard.appendChild(tile);
+      });
+    }
+
+    let dragTile = null;
+
+    function dragStart(e) {
+      dragTile = e.target;
+    }
+
+    function dragOver(e) {
+      e.preventDefault();
+    }
+
+    function dropTile(e) {
+      const target = e.target;
+      if (target === dragTile) return;
+
+      const tempStyle = target.style.backgroundImage;
+      const tempPos = target.style.backgroundPosition;
+
+      target.style.backgroundImage = dragTile.style.backgroundImage;
+      target.style.backgroundPosition = dragTile.style.backgroundPosition;
+
+      dragTile.style.backgroundImage = tempStyle;
+      dragTile.style.backgroundPosition = tempPos;
     }
   </script>
 </body>
