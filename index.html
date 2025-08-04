@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>EthOS Puzzle</title>
   <style>
     @font-face {
       font-family: 'ChicagoGT';
       src: url('cfont.ttf') format('truetype');
     }
+
     body {
       font-family: 'ChicagoGT', monospace;
       background-color: #a6c1ee;
@@ -15,6 +16,7 @@
       padding: 20px;
       text-align: center;
     }
+
     h1 {
       margin-bottom: 10px;
     }
@@ -36,16 +38,16 @@
     #board {
       margin: 20px auto;
       display: grid;
-      border: 3px solid #000;
+      border: 4px solid #000;
+      background-color: #000;
       gap: 2px;
-      background-color: #fff;
     }
 
     .tile-slot {
       width: 80px;
       height: 80px;
-      background-color: #f0f0f0;
-      border: 1px solid #aaa;
+      background-color: #fff;
+      border: none;
     }
 
     #pieces {
@@ -228,15 +230,23 @@
         const slot = document.createElement("div");
         slot.className = "tile-slot";
         slot.dataset.index = i;
+
         slot.ondragover = e => e.preventDefault();
+
         slot.ondrop = function(e) {
           e.preventDefault();
           const data = e.dataTransfer.getData("text");
           const tile = document.getElementById(data);
           if (!slot.hasChildNodes()) {
             slot.appendChild(tile);
+          } else {
+            const existingTile = slot.firstChild;
+            const parentFrom = tile.parentElement;
+            slot.replaceChild(tile, existingTile);
+            parentFrom.appendChild(existingTile);
           }
         };
+
         board.appendChild(slot);
       }
 
