@@ -35,14 +35,23 @@
       margin: 5px;
     }
 
+    #topBar {
+      margin-top: 10px;
+      display: none;
+      justify-content: center;
+      gap: 30px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
     #board {
       margin: 20px auto;
       display: grid;
       border: 4px solid #000;
-      background-color: #000;
-      gap: 0;
-      width: 492px; /* 6 x 82px */
+      background-color: #fff;
+      width: 492px;
       height: 492px;
+      display: none;
     }
 
     .tile-slot {
@@ -57,6 +66,7 @@
       justify-content: flex-start;
       padding-bottom: 10px;
       max-width: 90vw;
+      display: none;
     }
 
     .tile {
@@ -130,13 +140,19 @@
   </style>
 </head>
 <body>
-  <h1>🧩 EthOS Drag Puzzle</h1>
+  <h1>🧩 EthOS Puzzle</h1>
+
   <div id="controls">
     <button class="retro-btn" id="templateBtn" onclick="openTemplatePopup()">Choose Template</button>
     <button class="retro-btn" id="modeBtn" onclick="openModePopup()">Mode</button>
     <button class="retro-btn" onclick="startGame()">Start Game</button>
   </div>
-  <button class="retro-btn" id="resetBtn" onclick="startGame()" style="display: none;">Reset</button>
+
+  <div id="topBar">
+    <div>⏱️ Time: <span id="timer">0</span>s</div>
+    <div>🔁 Attempts: <span id="moves">0</span></div>
+    <button class="retro-btn" onclick="goHome()">Reset</button>
+  </div>
 
   <div id="board"></div>
   <div id="pieces"></div>
@@ -170,9 +186,12 @@
     let puzzleSize = 3;
     const board = document.getElementById("board");
     const pieces = document.getElementById("pieces");
-    const controls = document.getElementById("controls");
-
     const templateList = document.getElementById("templateList");
+    const timerDisplay = document.getElementById("timer");
+    const moveDisplay = document.getElementById("moves");
+    let timer = 0, interval;
+    let moveCount = 0;
+
     templates.forEach(tpl => {
       const div = document.createElement("div");
       div.className = "template-item";
@@ -209,16 +228,28 @@
       closePopups();
     }
 
+    function goHome() {
+      board.style.display = "none";
+      pieces.style.display = "none";
+      document.getElementById("topBar").style.display = "none";
+      document.getElementById("controls").style.display = "block";
+      clearInterval(interval);
+      timer = 0;
+      moveCount = 0;
+    }
+
     function startGame() {
       board.innerHTML = "";
       pieces.innerHTML = "";
-      document.getElementById("resetBtn").style.display = "inline-block";
-      controls.style.display = "none";
+      document.getElementById("controls").style.display = "none";
+      board.style.display = "grid";
+      pieces.style.display = "flex";
+      document.getElementById("topBar").style.display = "flex";
 
       board.style.gridTemplateColumns = `repeat(${puzzleSize}, 1fr)`;
 
       const total = puzzleSize * puzzleSize;
-      const tileSize = 492 / 6; // ukuran tetap, sesuaikan 6x6 grid
+      const tileSize = 492 / 6;
       let tiles = [];
       for (let i = 0; i < total; i++) tiles.push(i);
       const oneIndex = Math.floor(Math.random() * total);
@@ -232,7 +263,6 @@
         slot.dataset.index = i;
 
         slot.ondragover = e => e.preventDefault();
-
         slot.ondrop = function(e) {
           e.preventDefault();
           const data = e.dataTransfer.getData("text");
@@ -245,6 +275,8 @@
             slot.replaceChild(tile, existingTile);
             parentFrom.appendChild(existingTile);
           }
+          moveCount++;
+          moveDisplay.textContent = moveCount;
         };
 
         board.appendChild(slot);
@@ -257,6 +289,16 @@
       shuffle(rest).forEach(i => {
         pieces.appendChild(createTile(i, tileSize));
       });
+
+      timer = 0;
+      moveCount = 0;
+      timerDisplay.textContent = 0;
+      moveDisplay.textContent = 0;
+      clearInterval(interval);
+      interval = setInterval(() => {
+        timer++;
+        timerDisplay.textContent = timer;
+      }, 1000);
     }
 
     function createTile(i, size) {
