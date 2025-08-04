@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>EthOS Sliding Puzzle</title>
+  <meta charset="UTF-8">
+  <title>EthOS Puzzle</title>
   <style>
     @font-face {
       font-family: 'ChicagoGT';
@@ -12,19 +12,15 @@
       font-family: 'ChicagoGT', monospace;
       background-color: #a6c1ee;
       margin: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       padding: 20px;
-    }
-    h1 {
-      margin-bottom: 10px;
       text-align: center;
     }
+    h1 { margin-bottom: 10px; }
+
     .retro-btn {
       font-family: inherit;
       font-size: 16px;
-      padding: 10px 20px;
+      padding: 6px 14px;
       background: #e0e0e0;
       border: 2px solid;
       border-top-color: #fff;
@@ -34,7 +30,43 @@
       cursor: pointer;
       margin: 5px;
     }
-    .popup, #overlay { display: none; }
+
+    #board {
+      margin: 20px auto;
+      display: grid;
+      border: 3px solid #000;
+      gap: 2px;
+      background-color: #fff;
+    }
+
+    .tile-slot {
+      width: 80px;
+      height: 80px;
+      background-color: #eee;
+      border: 1px dashed #999;
+    }
+
+    #pieces {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      justify-content: center;
+    }
+
+    .tile {
+      width: 80px;
+      height: 80px;
+      background-size: cover;
+      background-position: center;
+      border: 1px solid #000;
+      cursor: grab;
+    }
+
+    .popup, #overlay {
+      display: none;
+    }
+
     .popup {
       position: fixed;
       top: 50%;
@@ -45,7 +77,28 @@
       padding: 20px;
       z-index: 1000;
       box-shadow: inset -3px -3px #fff, inset 3px 3px #555;
+      max-width: 90vw;
+      overflow-x: auto;
     }
+
+    .template-grid {
+      display: flex;
+      gap: 10px;
+    }
+
+    .template-item {
+      width: 140px;
+      background: #dcdcdc;
+      border: 2px solid #000;
+      padding: 6px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .template-item img {
+      width: 100%;
+    }
+
     #overlay {
       position: fixed;
       width: 100%;
@@ -55,45 +108,7 @@
       left: 0;
       z-index: 900;
     }
-    .template-grid {
-      display: flex;
-      overflow-x: auto;
-      gap: 10px;
-      max-width: 90vw;
-    }
-    .template-item {
-      width: 150px;
-      background: #dcdcdc;
-      border: 2px solid #000;
-      padding: 6px;
-      text-align: center;
-      flex-shrink: 0;
-    }
-    .template-item img {
-      width: 100%;
-    }
-    #puzzleBoard {
-      display: grid;
-      margin-top: 20px;
-      border: 4px solid #000;
-      max-width: 95vw;
-    }
-    .tile {
-      background-size: 100% 100%;
-      background-repeat: no-repeat;
-      border-radius: 25%;
-      box-shadow: inset 0 0 4px #444;
-      transition: transform 0.2s ease;
-      cursor: pointer;
-    }
-    .empty {
-      background: transparent;
-      box-shadow: none;
-    }
-    #infoBar {
-      margin-top: 10px;
-      font-size: 18px;
-    }
+
     #winPopup {
       display: none;
       position: fixed;
@@ -110,15 +125,17 @@
   </style>
 </head>
 <body>
-  <h1>🧩 EthOS Puzzle</h1>
+  <h1>🧩 EthOS Drag-and-Drop Puzzle</h1>
   <div>
-    <button class="retro-btn" onclick="openTemplatePopup()">Choose Template</button>
-    <button class="retro-btn" onclick="openModePopup()">Mode</button>
+    <button class="retro-btn" id="templateBtn" onclick="openTemplatePopup()">Choose Template</button>
+    <button class="retro-btn" id="modeBtn" onclick="openModePopup()">Mode</button>
     <button class="retro-btn" onclick="startGame()">Start Game</button>
-    <button class="retro-btn" onclick="resetGame()">Reset</button>
+    <button class="retro-btn" id="resetBtn" onclick="startGame()" style="display: none;">Reset</button>
   </div>
-  <div id="infoBar">Time: <span id="timer">0</span>s | Score: <span id="score">0</span></div>
-  <div id="puzzleBoard"></div>
+
+  <div id="board"></div>
+  <div id="pieces"></div>
+
   <div id="overlay" onclick="closePopups()"></div>
   <div id="templatePopup" class="popup">
     <div class="template-grid" id="templateList"></div>
@@ -129,7 +146,9 @@
     <button class="retro-btn" onclick="selectMode(6)">6 x 6</button>
     <button class="retro-btn" onclick="selectMode(10)">10 x 10</button>
   </div>
-  <div id="winPopup">🎉Congratulation! You nailed it! 🎉</div>
+
+  <div id="winPopup">🎉 You Win! 🎉</div>
+
   <script>
     const templates = [
       { name: "EthOS Original", file: "ethos-original.jpg" },
@@ -142,140 +161,113 @@
       { name: "EthOS Surreal Garden", file: "ethos-surreal-garden.png" },
       { name: "EthOS Surreal Animals", file: "ethos-surreal-animals.png" }
     ];
+    let selectedTemplate = templates[0];
     let puzzleSize = 3;
-    let selectedTemplate = templates[0].file;
-    let timer = 0;
-    let interval = null;
-    let score = 0;
-    let currentOrder = [];
-    let correctOrder = [];
-    const puzzleBoard = document.getElementById("puzzleBoard");
-    const timerDisplay = document.getElementById("timer");
-    const scoreDisplay = document.getElementById("score");
+    const board = document.getElementById("board");
+    const pieces = document.getElementById("pieces");
+
     const templateList = document.getElementById("templateList");
     templates.forEach(tpl => {
       const div = document.createElement("div");
       div.className = "template-item";
       div.innerHTML = `<img src="${tpl.file}" />
         <div>${tpl.name}</div>
-        <button class="retro-btn" onclick="selectTemplate('${tpl.file}')">Select</button>`;
+        <button class="retro-btn" onclick="selectTemplate('${tpl.file}', '${tpl.name}')">Select</button>`;
       templateList.appendChild(div);
     });
-    function selectTemplate(file) {
-      selectedTemplate = file;
-      closePopups();
-    }
-    function selectMode(size) {
-      puzzleSize = size;
-      closePopups();
-    }
+
     function openTemplatePopup() {
       document.getElementById("templatePopup").style.display = "block";
       document.getElementById("overlay").style.display = "block";
     }
+
     function openModePopup() {
       document.getElementById("modePopup").style.display = "block";
       document.getElementById("overlay").style.display = "block";
     }
+
     function closePopups() {
       document.querySelectorAll('.popup').forEach(p => p.style.display = 'none');
       document.getElementById("overlay").style.display = "none";
     }
-    function resetGame() {
-      clearInterval(interval);
-      startGame();
+
+    function selectTemplate(file, name) {
+      selectedTemplate = { file, name };
+      document.getElementById("templateBtn").innerText = name;
+      closePopups();
     }
+
+    function selectMode(size) {
+      puzzleSize = size;
+      document.getElementById("modeBtn").innerText = `${size} x ${size}`;
+      closePopups();
+    }
+
     function startGame() {
-      timer = 0;
-      score = 0;
-      currentOrder = [];
-      correctOrder = [];
-      timerDisplay.textContent = timer;
-      scoreDisplay.textContent = score;
-      clearInterval(interval);
-      interval = setInterval(() => {
-        timer++;
-        timerDisplay.textContent = timer;
-      }, 1000);
-      generatePuzzle();
-    }
-    function generatePuzzle() {
-      puzzleBoard.innerHTML = "";
-      puzzleBoard.style.gridTemplateColumns = `repeat(${puzzleSize}, 1fr)`;
+      board.innerHTML = "";
+      pieces.innerHTML = "";
+      document.getElementById("resetBtn").style.display = "inline-block";
+
+      board.style.gridTemplateColumns = `repeat(${puzzleSize}, 1fr)`;
+      board.style.width = `${puzzleSize * 82}px`;
+      board.style.height = `${puzzleSize * 82}px`;
+
       const total = puzzleSize * puzzleSize;
-      const tiles = Array.from({ length: total }, (_, i) => i);
-      correctOrder = [...tiles];
-      let shuffled = [...tiles];
-      do {
-        shuffled.sort(() => Math.random() - 0.5);
-      } while (!isSolvable(shuffled));
-      currentOrder = [...shuffled];
-      const tileSize = 420 / puzzleSize;
-      puzzleBoard.style.width = puzzleBoard.style.height = `${tileSize * puzzleSize}px`;
-      shuffled.forEach((val, index) => {
-        const tile = document.createElement("div");
-        tile.className = "tile";
-        tile.style.width = tile.style.height = `${tileSize}px`;
-        tile.dataset.index = index;
-        if (val === total - 1) {
-          tile.classList.add("empty");
-        } else {
-          const x = val % puzzleSize;
-          const y = Math.floor(val / puzzleSize);
-          tile.style.backgroundImage = `url(${selectedTemplate})`;
-          tile.style.backgroundSize = `${puzzleSize * 100}% ${puzzleSize * 100}%`;
-          tile.style.backgroundPosition = `${(x / (puzzleSize - 1)) * 100}% ${(y / (puzzleSize - 1)) * 100}%`;
-        }
-        tile.addEventListener("click", () => moveTile(index));
-        puzzleBoard.appendChild(tile);
+      let tiles = [];
+      for (let i = 0; i < total; i++) tiles.push(i);
+      const oneIndex = Math.floor(Math.random() * total);
+      const rest = tiles.filter(i => i !== oneIndex);
+
+      for (let i = 0; i < total; i++) {
+        const slot = document.createElement("div");
+        slot.className = "tile-slot";
+        slot.dataset.index = i;
+        slot.ondragover = e => e.preventDefault();
+        slot.ondrop = function(e) {
+          e.preventDefault();
+          const data = e.dataTransfer.getData("text");
+          const tile = document.getElementById(data);
+          if (!slot.hasChildNodes()) {
+            slot.appendChild(tile);
+          }
+        };
+        board.appendChild(slot);
+      }
+
+      const oneSlot = board.children[oneIndex];
+      const tile = createTile(oneIndex);
+      oneSlot.appendChild(tile);
+
+      shuffle(rest).forEach(i => {
+        pieces.appendChild(createTile(i));
       });
     }
-    function moveTile(i) {
-      const emptyIndex = currentOrder.indexOf(puzzleSize * puzzleSize - 1);
-      const [x1, y1] = [i % puzzleSize, Math.floor(i / puzzleSize)];
-      const [x2, y2] = [emptyIndex % puzzleSize, Math.floor(emptyIndex / puzzleSize)];
-      const isAdjacent = Math.abs(x1 - x2) + Math.abs(y1 - y2) === 1;
-      if (isAdjacent) {
-        [currentOrder[i], currentOrder[emptyIndex]] = [currentOrder[emptyIndex], currentOrder[i]];
-        score += 10;
-        scoreDisplay.textContent = score;
-        generatePuzzleFromOrder();
-        checkWin();
-      }
+
+    function createTile(i) {
+      const div = document.createElement("div");
+      div.className = "tile";
+      div.id = "tile" + i;
+      div.draggable = true;
+      div.style.backgroundImage = `url(${selectedTemplate.file})`;
+      div.style.backgroundSize = `${puzzleSize * 100}% ${puzzleSize * 100}%`;
+      const x = i % puzzleSize;
+      const y = Math.floor(i / puzzleSize);
+      div.style.backgroundPosition = `${(x / (puzzleSize - 1)) * 100}% ${(y / (puzzleSize - 1)) * 100}%`;
+      div.ondragstart = e => {
+        e.dataTransfer.setData("text", e.target.id);
+      };
+      return div;
     }
-    function generatePuzzleFromOrder() {
-      const tiles = puzzleBoard.children;
-      currentOrder.forEach((val, index) => {
-        const tile = tiles[index];
-        tile.className = "tile";
-        if (val === puzzleSize * puzzleSize - 1) {
-          tile.classList.add("empty");
-          tile.style.backgroundImage = "";
-        } else {
-          const x = val % puzzleSize;
-          const y = Math.floor(val / puzzleSize);
-          tile.style.backgroundImage = `url(${selectedTemplate})`;
-          tile.style.backgroundSize = `${puzzleSize * 100}% ${puzzleSize * 100}%`;
-          tile.style.backgroundPosition = `${(x / (puzzleSize - 1)) * 100}% ${(y / (puzzleSize - 1)) * 100}%`;
-        }
-      });
-    }
-    function checkWin() {
-      if (currentOrder.every((val, i) => val === correctOrder[i])) {
-        clearInterval(interval);
-        document.getElementById("winPopup").style.display = "block";
-        setTimeout(() => document.getElementById("winPopup").style.display = "none", 3000);
+
+    function shuffle(array) {
+      let currentIndex = array.length,  randomIndex;
+      while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [array[currentIndex], array[randomIndex]] = [
+          array[randomIndex], array[currentIndex]];
       }
-    }
-    function isSolvable(arr) {
-      let inv = 0;
-      for (let i = 0; i < arr.length - 1; i++) {
-        for (let j = i + 1; j < arr.length; j++) {
-          if (arr[i] > arr[j] && arr[i] !== puzzleSize * puzzleSize - 1 && arr[j] !== puzzleSize * puzzleSize - 1)
-            inv++;
-        }
-      }
-      return inv % 2 === 0;
+      return array;
     }
   </script>
 </body>
