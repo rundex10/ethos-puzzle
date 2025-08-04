@@ -17,6 +17,16 @@
       overflow-x: hidden;
     }
 
+    #game-desc {
+  font-size: 14px;
+  max-width: 600px;
+  margin: 0 auto;
+  margin-top: 10px;
+  color: #222;
+  line-height: 1.5;
+  padding: 10px;
+}
+
     #controls {
       position: absolute;
       top: 50%;
@@ -136,6 +146,13 @@
 </head>
 <body>
   <img src="ethospuzzle-logo.png" id="logo-title" alt="EthOS Puzzle" />
+  <p id="game-desc">
+  EthOS Puzzle isn’t about grinding, speedrunning, or proving anything.<br>
+  It’s just a fun little game for all EthOS frens — made with love, for the vibes.<br>
+  Pick your favorite EthOS look, drag pieces, and enjoy the ride.<br><br>
+  No pressure. No leaderboard. Just vibes 🧩
+</p>
+
   <div id="controls">
     <button class="retro-btn" id="templateBtn" onclick="openTemplatePopup()">Choose Template</button>
     <button class="retro-btn" id="modeBtn" onclick="openModePopup()">Mode</button>
