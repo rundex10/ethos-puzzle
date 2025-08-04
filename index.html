@@ -15,7 +15,9 @@
       padding: 20px;
       text-align: center;
     }
-    h1 { margin-bottom: 10px; }
+    h1 {
+      margin-bottom: 10px;
+    }
 
     .retro-btn {
       font-family: inherit;
@@ -42,16 +44,18 @@
     .tile-slot {
       width: 80px;
       height: 80px;
-      background-color: #eee;
-      border: 1px dashed #999;
+      background-color: #f0f0f0;
+      border: 1px solid #aaa;
     }
 
     #pieces {
       margin-top: 20px;
+      overflow-x: auto;
       display: flex;
-      flex-wrap: wrap;
       gap: 5px;
-      justify-content: center;
+      justify-content: flex-start;
+      padding-bottom: 10px;
+      max-width: 90vw;
     }
 
     .tile {
@@ -61,6 +65,7 @@
       background-position: center;
       border: 1px solid #000;
       cursor: grab;
+      flex-shrink: 0;
     }
 
     .popup, #overlay {
@@ -84,6 +89,7 @@
     .template-grid {
       display: flex;
       gap: 10px;
+      flex-wrap: nowrap;
     }
 
     .template-item {
@@ -260,12 +266,11 @@
     }
 
     function shuffle(array) {
-      let currentIndex = array.length,  randomIndex;
+      let currentIndex = array.length, randomIndex;
       while (currentIndex !== 0) {
         randomIndex = Math.floor(Math.random() * currentIndex);
         currentIndex--;
-        [array[currentIndex], array[randomIndex]] = [
-          array[randomIndex], array[currentIndex]];
+        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
       }
       return array;
     }
