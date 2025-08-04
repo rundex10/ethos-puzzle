@@ -150,7 +150,6 @@
   <div id="board"></div>
   <div id="pieces"></div>
 
-  <!-- Popups -->
   <div id="overlay" onclick="closePopups()"></div>
   <div id="templatePopup" class="popup">
     <div class="template-grid" id="templateList"></div>
@@ -260,29 +259,34 @@
         slot.dataset.index = i;
         slot.ondragover = e => e.preventDefault();
         slot.ondrop = function(e) {
-          e.preventDefault();
-          const data = e.dataTransfer.getData("text");
-          const tileOriginal = document.getElementById(data);
-          const tileId = parseInt(tileOriginal.dataset.id);
-          const fromPieces = pieces.contains(tileOriginal);
+  e.preventDefault();
+  const data = e.dataTransfer.getData("text");
+  const tileOriginal = document.getElementById(data);
+  const tileId = parseInt(tileOriginal.dataset.id);
+  const fromPieces = pieces.contains(tileOriginal);
 
-          if (fromPieces) {
-            pieces.removeChild(tileOriginal);
-            const tile = createTile(tileId, tileSize);
-            slot.appendChild(tile);
-          } else {
-            if (!slot.hasChildNodes()) {
-              slot.appendChild(tileOriginal);
-            } else {
-              const existing = slot.firstChild;
-              slot.replaceChild(tileOriginal, existing);
-              pieces.appendChild(existing);
-            }
-          }
-          moveCount++;
-          moveDisplay.textContent = moveCount;
-          checkWin();
-        };
+  if (fromPieces) {
+    pieces.removeChild(tileOriginal);
+    const tile = createTile(tileId, tileSize);
+    slot.appendChild(tile);
+  } else {
+    if (!slot.hasChildNodes()) {
+      slot.appendChild(tileOriginal);
+    } else {
+      const existing = slot.firstChild;
+      slot.removeChild(existing);
+      
+      existing.style.width = "49.2px";
+      existing.style.height = "49.2px";
+      pieces.appendChild(existing);
+
+      slot.appendChild(tileOriginal);
+    }
+  }
+  moveCount++;
+  moveDisplay.textContent = moveCount;
+  checkWin();
+};
         board.appendChild(slot);
       }
 
