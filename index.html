@@ -18,36 +18,48 @@
     }
 
     #header-bar {
-      display: flex;
-      align-items: center;
-      background-color: #000;
-      color: #fff;
-      height: 40px;
-      overflow: hidden;
-      position: relative;
-      padding-left: 10px;
-    }
+  display: flex;
+  align-items: center;
+  background: #c0c0c0;
+  border: 2px solid #404040;
+  border-top-color: #fff;
+  border-left-color: #fff;
+  border-bottom-color: #404040;
+  border-right-color: #404040;
+  height: 40px;
+  padding: 4px;
+  box-sizing: border-box;
+}
 
-    #logo-title {
-      height: 30px;
-      margin-right: 10px;
-      flex-shrink: 0;
-    }
+#logo-title {
+  height: 30px;
+  margin-left: 8px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
 
-    #marquee {
-      white-space: nowrap;
-      position: absolute;
-      left: 100%;
-      animation: scrollText 20s linear infinite;
-      font-size: 14px;
-      font-weight: bold;
-      color: #fff;
-    }
+#marquee-container {
+  position: relative;
+  overflow: hidden;
+  flex-grow: 1;
+  height: 100%;
+}
 
-    @keyframes scrollText {
-      0% { left: 100%; }
-      100% { left: -100%; }
-    }
+#marquee {
+  white-space: nowrap;
+  display: inline-block;
+  animation: scrollText 20s linear infinite;
+  font-size: 14px;
+  color: #000;
+  font-weight: bold;
+  line-height: 30px;
+  padding-left: 100%;
+}
+
+@keyframes scrollText {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
 
     #game-desc {
       font-size: 14px;
@@ -171,9 +183,11 @@
 </head>
 <body>
   <div id="header-bar">
-    <img src="ethospuzzle-logo.png" id="logo-title" alt="EthOS Puzzle" />
-    <div id="marquee">DM ME A CODE PLEASE 😁 - DM ME A CODE PLEASE 😊 - DM ME A CODE PLEASE😭 - </div>
+  <img src="ethospuzzle-logo.png" id="logo-title" alt="EthOS Puzzle" />
+  <div id="marquee-container">
+    <div id="marquee">DM ME A CODE PLEASE 😁 DM ME A CODE PLEASE 😊 DM ME A CODE PLEASE 😭 DM ME A CODE PLEASE 😍 DM ME A CODE PLEASE 🤞</div>
   </div>
+</div>
 
   <p id="game-desc">
     EthOS Puzzle isn’t about grinding, speedrunning, or proving anything.<br>
