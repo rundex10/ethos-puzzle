@@ -40,14 +40,13 @@
       display: grid;
       border: 4px solid #000;
       background-color: #000;
-      gap: 2px;
+      gap: 0;
+      width: 492px; /* 6 x 82px */
+      height: 492px;
     }
 
     .tile-slot {
-      width: 80px;
-      height: 80px;
-      background-color: #fff;
-      border: none;
+      background: none;
     }
 
     #pieces {
@@ -61,8 +60,6 @@
     }
 
     .tile {
-      width: 80px;
-      height: 80px;
       background-size: cover;
       background-position: center;
       border: 1px solid #000;
@@ -133,13 +130,13 @@
   </style>
 </head>
 <body>
-  <h1>🧩 EthOS Drag-and-Drop Puzzle</h1>
-  <div>
+  <h1>🧩 EthOS Drag Puzzle</h1>
+  <div id="controls">
     <button class="retro-btn" id="templateBtn" onclick="openTemplatePopup()">Choose Template</button>
     <button class="retro-btn" id="modeBtn" onclick="openModePopup()">Mode</button>
     <button class="retro-btn" onclick="startGame()">Start Game</button>
-    <button class="retro-btn" id="resetBtn" onclick="startGame()" style="display: none;">Reset</button>
   </div>
+  <button class="retro-btn" id="resetBtn" onclick="startGame()" style="display: none;">Reset</button>
 
   <div id="board"></div>
   <div id="pieces"></div>
@@ -173,6 +170,7 @@
     let puzzleSize = 3;
     const board = document.getElementById("board");
     const pieces = document.getElementById("pieces");
+    const controls = document.getElementById("controls");
 
     const templateList = document.getElementById("templateList");
     templates.forEach(tpl => {
@@ -215,12 +213,12 @@
       board.innerHTML = "";
       pieces.innerHTML = "";
       document.getElementById("resetBtn").style.display = "inline-block";
+      controls.style.display = "none";
 
       board.style.gridTemplateColumns = `repeat(${puzzleSize}, 1fr)`;
-      board.style.width = `${puzzleSize * 82}px`;
-      board.style.height = `${puzzleSize * 82}px`;
 
       const total = puzzleSize * puzzleSize;
+      const tileSize = 492 / 6; // ukuran tetap, sesuaikan 6x6 grid
       let tiles = [];
       for (let i = 0; i < total; i++) tiles.push(i);
       const oneIndex = Math.floor(Math.random() * total);
@@ -229,6 +227,8 @@
       for (let i = 0; i < total; i++) {
         const slot = document.createElement("div");
         slot.className = "tile-slot";
+        slot.style.width = tileSize + "px";
+        slot.style.height = tileSize + "px";
         slot.dataset.index = i;
 
         slot.ondragover = e => e.preventDefault();
@@ -251,19 +251,21 @@
       }
 
       const oneSlot = board.children[oneIndex];
-      const tile = createTile(oneIndex);
+      const tile = createTile(oneIndex, tileSize);
       oneSlot.appendChild(tile);
 
       shuffle(rest).forEach(i => {
-        pieces.appendChild(createTile(i));
+        pieces.appendChild(createTile(i, tileSize));
       });
     }
 
-    function createTile(i) {
+    function createTile(i, size) {
       const div = document.createElement("div");
       div.className = "tile";
       div.id = "tile" + i;
       div.draggable = true;
+      div.style.width = size + "px";
+      div.style.height = size + "px";
       div.style.backgroundImage = `url(${selectedTemplate.file})`;
       div.style.backgroundSize = `${puzzleSize * 100}% ${puzzleSize * 100}%`;
       const x = i % puzzleSize;
