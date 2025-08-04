@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>EthOS Puzzle</title>
+  <title>EthOS</title>
   <style>
     @font-face {
       font-family: 'ChicagoGT';
@@ -61,8 +61,6 @@
       border: 1px solid #000;
       cursor: grab;
       flex-shrink: 0;
-      width: 49.2px;
-      height: 49.2px;
     }
     .popup, #overlay {
       display: none;
@@ -125,11 +123,12 @@
   <div id="topBar">
     <div>⏱️ Time: <span id="timer">0</span>s</div>
     <div>🔁 Attempts: <span id="moves">0</span></div>
-    <button class="retro-btn" onclick="goHome()">Back to Menu</button>
+    <button class="retro-btn" onclick="goHome()">Restart</button>
   </div>
   <div id="board"></div>
   <div id="pieces"></div>
 
+  <!-- Popups -->
   <div id="overlay" onclick="closePopups()"></div>
   <div id="templatePopup" class="popup">
     <div class="template-grid" id="templateList"></div>
@@ -260,7 +259,7 @@
       oneSlot.appendChild(createTile(oneIndex, tileSize));
 
       shuffle(rest).forEach(i => {
-        pieces.appendChild(createTile(i, tileSize));
+        pieces.appendChild(createTile(i, tileSize, true));
       });
 
       timer = 0;
@@ -274,16 +273,26 @@
       }, 1000);
     }
 
-    function createTile(i, size) {
+    function createTile(i, size, isList = false) {
       const div = document.createElement("div");
       div.className = "tile";
       div.id = "tile" + i;
       div.draggable = true;
       div.style.backgroundImage = `url(${selectedTemplate.file})`;
       div.style.backgroundSize = `${puzzleSize * 100}% ${puzzleSize * 100}%`;
+
       const x = i % puzzleSize;
       const y = Math.floor(i / puzzleSize);
       div.style.backgroundPosition = `${(x / (puzzleSize - 1)) * 100}% ${(y / (puzzleSize - 1)) * 100}%`;
+
+      if (isList) {
+        div.style.width = "49.2px";
+        div.style.height = "49.2px";
+      } else {
+        div.style.width = size + "px";
+        div.style.height = size + "px";
+      }
+
       div.ondragstart = e => e.dataTransfer.setData("text", e.target.id);
       div.ondblclick = () => pieces.appendChild(div);
       return div;
